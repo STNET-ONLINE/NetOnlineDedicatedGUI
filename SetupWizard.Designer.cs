@@ -34,11 +34,14 @@
             btnCancel = new Button();
             btnNext = new Button();
             btnBack = new Button();
+            checkBox1 = new CheckBox();
+            panelContent.SuspendLayout();
             panel2.SuspendLayout();
             SuspendLayout();
             // 
             // panelContent
             // 
+            panelContent.Controls.Add(checkBox1);
             panelContent.Dock = DockStyle.Fill;
             panelContent.Location = new Point(0, 0);
             panelContent.Name = "panelContent";
@@ -86,6 +89,17 @@
             btnBack.UseVisualStyleBackColor = true;
             btnBack.Click += btnBack_Click;
             // 
+            // checkBox1
+            // 
+            checkBox1.AutoSize = true;
+            checkBox1.Location = new Point(3, 375);
+            checkBox1.Name = "checkBox1";
+            checkBox1.Size = new Size(114, 19);
+            checkBox1.TabIndex = 0;
+            checkBox1.Text = "Sandboxie Mode";
+            checkBox1.UseVisualStyleBackColor = true;
+            checkBox1.CheckedChanged += checkBox1_CheckedChanged;
+            // 
             // SetupWizard
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -101,6 +115,8 @@
             Name = "SetupWizard";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "NET Online - Мастер первоначальной настройки\n";
+            panelContent.ResumeLayout(false);
+            panelContent.PerformLayout();
             panel2.ResumeLayout(false);
             ResumeLayout(false);
         }
@@ -112,5 +128,7 @@
         private Button btnCancel;
         private Button btnNext;
         private Button btnBack;
+        private CheckBox checkBox1;
+     //   private CheckBox chkSandboxie;
     }
 }

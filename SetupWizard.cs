@@ -28,6 +28,10 @@ namespace NetOnlineDedicatedGUI
         string enginePath;
         string fsGamePath;
 
+
+        CheckBox chkSandboxie;
+        bool useSandboxie;
+
         // ===== ENUM ШАГОВ =====
         enum WizardStep
         {
@@ -211,6 +215,24 @@ namespace NetOnlineDedicatedGUI
             };
             layout.Controls.Add(btnBrowseEngine, 2, 1);
 
+            var chkSandboxieLocal = new CheckBox
+            {
+                Text = "Запускать сервер в Sandboxie (песочнице)",
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleLeft,
+                Checked = useSandboxie
+            };
+
+            chkSandboxieLocal.CheckedChanged += (s, e) =>
+            {
+                useSandboxie = chkSandboxieLocal.Checked;
+            };
+
+            layout.SetColumnSpan(chkSandboxieLocal, 3);
+            layout.Controls.Add(chkSandboxieLocal, 0, 3);
+
+            chkSandboxie = chkSandboxieLocal;
+
             // fsgame_dedicated.ltx
             layout.Controls.Add(
                 new Label { Text = "fsgame_dedicated.ltx:", TextAlign = ContentAlignment.MiddleLeft },
@@ -239,286 +261,294 @@ namespace NetOnlineDedicatedGUI
                 }
             };
             layout.Controls.Add(btnBrowseFsGame, 2, 2);
-
             panelContent.Controls.Add(layout);
         }
 
 
+
         // ===== ПЕРВЫЙ ЭКРАН =====
         void LoadWelcomeStep()
-        {
-            var label = new Label
             {
-                Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.MiddleCenter,
-                Font = new Font(Font.FontFamily, 11f),
-                Text =
-                    "NET Online Dedicated Server Manager\n\n" +
-                    "Этот мастер поможет выполнить первоначальную настройку сервера."
-            };
+                var label = new Label
+                {
+                    Dock = DockStyle.Fill,
+                    TextAlign = ContentAlignment.MiddleCenter,
+                    Font = new Font(Font.FontFamily, 11f),
+                    Text =
+                        "NET Online Dedicated Server Manager\n\n" +
+                        "Этот мастер поможет выполнить первоначальную настройку сервера."
+                };
 
-            panelContent.Controls.Add(label);
-        }
+                panelContent.Controls.Add(label);
+            }
 
-        void LoadServersStep()
-        {
-            var panel = new Panel
+            void LoadServersStep()
             {
-                Dock = DockStyle.Fill,
-                Padding = new Padding(10)
-            };
+                var panel = new Panel
+                {
+                    Dock = DockStyle.Fill,
+                    Padding = new Padding(10)
+                };
 
-            var title = new Label
-            {
-                Text = "Создайте серверы",
-                Font = new Font(Font.FontFamily, 10f, FontStyle.Bold),
-                Dock = DockStyle.Top,
-                Height = 30
-            };
+                var title = new Label
+                {
+                    Text = "Создайте серверы",
+                    Font = new Font(Font.FontFamily, 10f, FontStyle.Bold),
+                    Dock = DockStyle.Top,
+                    Height = 30
+                };
 
-            var contextMenu = new ContextMenuStrip();
+                var contextMenu = new ContextMenuStrip();
 
-            var miAdd = new ToolStripMenuItem("Добавить сервер");
-            var miRemove = new ToolStripMenuItem("Удалить сервер");
+                var miAdd = new ToolStripMenuItem("Добавить сервер");
+                var miRemove = new ToolStripMenuItem("Удалить сервер");
 
-            contextMenu.Items.AddRange(new ToolStripItem[]
-            {
+                contextMenu.Items.AddRange(new ToolStripItem[]
+                {
              miAdd,
              miRemove
-            });
-
-            var grid = new DataGridView
-            {
-                Dock = DockStyle.Fill,
-                AutoGenerateColumns = false,
-                AllowUserToAddRows = false,
-                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-                ContextMenuStrip = contextMenu   // ← ВАЖНО
-            };
-
-            miAdd.Click += (s, e) =>
-            {
-                servers.Add(new ServerEntry
-                {
-                    Name = $"NET_Server_{servers.Count}",
-                    Mode = "lb",
-                    Location = "lobby",
-                    Password = "",
-                    MaxPlayers = 32,
-                    AffinityCores = 1,
-                    PortSv = 5500 + servers.Count * 10,
-                    PortGs = 5501 + servers.Count * 10,
-                    PortCl = 5502 + servers.Count * 10
                 });
-            };
 
-            miRemove.Click += (s, e) =>
-            {
-                if (grid.CurrentRow == null)
-                    return;
-
-                var item = grid.CurrentRow.DataBoundItem as ServerEntry;
-                if (item != null)
-                    servers.Remove(item);
-            };
-
-
-            grid.MouseDown += (s, e) =>
-            {
-                if (e.Button == MouseButtons.Right)
+                var grid = new DataGridView
                 {
-                    var hit = grid.HitTest(e.X, e.Y);
-                    if (hit.RowIndex >= 0)
+                    Dock = DockStyle.Fill,
+                    AutoGenerateColumns = false,
+                    AllowUserToAddRows = false,
+                    SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+                    ContextMenuStrip = contextMenu   // ← ВАЖНО
+                };
+
+                miAdd.Click += (s, e) =>
+                {
+                    servers.Add(new ServerEntry
                     {
-                        grid.ClearSelection();
-                        grid.Rows[hit.RowIndex].Selected = true;
-                    }
-                }
-            };
+                        Name = $"NET_Server_{servers.Count}",
+                        Mode = "lb",
+                        Location = "lobby",
+                        Password = "",
+                        MaxPlayers = 32,
+                        AffinityCores = 1,
+                        PortSv = 5500 + servers.Count * 10,
+                        PortGs = 5501 + servers.Count * 10,
+                        PortCl = 5502 + servers.Count * 10
+                    });
+                };
 
-
-
-            // === КОЛОНКИ ===
-            grid.Columns.Add(new DataGridViewTextBoxColumn
-            {
-                HeaderText = "Название",
-                DataPropertyName = "Name",
-                Width = 160
-            });
-
-            grid.Columns.Add(new DataGridViewComboBoxColumn
-            {
-                HeaderText = "Режим",
-                DataPropertyName = "Mode",
-                DataSource = new[] { "lb", "fmp", "tdm", "dm", "cp", "br" },
-                Width = 60
-            });
-
-            grid.Columns.Add(new DataGridViewTextBoxColumn
-            {
-                HeaderText = "Локация",
-                DataPropertyName = "Location",
-                Width = 120
-            });
-
-            grid.Columns.Add(new DataGridViewTextBoxColumn
-            {
-                HeaderText = "Игроки",
-                DataPropertyName = "MaxPlayers",
-                Width = 70
-            });
-
-            grid.Columns.Add(new DataGridViewTextBoxColumn
-            {
-                HeaderText = "CPU",
-                DataPropertyName = "AffinityCores",
-                Width = 50
-            });
-
-            grid.Columns.Add(new DataGridViewTextBoxColumn
-            {
-                HeaderText = "Life Time (минуты)",
-                DataPropertyName = "LifetimeHours",
-                Width = 80
-            });
-
-            grid.Columns.Add(new DataGridViewTextBoxColumn
-            {
-                HeaderText = "Пароль",
-                DataPropertyName = "Password",
-                Width = 80
-            });
-
-            grid.Columns.Add(new DataGridViewTextBoxColumn
-            {
-                HeaderText = "port sv",
-                DataPropertyName = "PortSv",
-                Width = 70
-            });
-
-            grid.Columns.Add(new DataGridViewTextBoxColumn
-            {
-                HeaderText = "port gs",
-                DataPropertyName = "PortGs",
-                Width = 70
-            });
-
-            grid.Columns.Add(new DataGridViewTextBoxColumn
-            {
-                HeaderText = "port cl",
-                DataPropertyName = "PortCl",
-                Width = 70
-            });
-
-            // === КНОПКИ ===
-            var btnAdd = new Button { Text = "Добавить сервер" };
-            var btnRemove = new Button { Text = "Удалить" };
-
-            btnAdd.Click += (s, e) =>
-            {
-                servers.Add(new ServerEntry
+                miRemove.Click += (s, e) =>
                 {
-                    Name = $"NET_Server_{servers.Count + 1}",
-                    Mode = "lb",
-                    Location = "lobby",
-                    Password = "",
-                    MaxPlayers = 32,
-                    AffinityCores = 1,
-                    PortSv = 5500 + servers.Count * 10,
-                    PortGs = 5501 + servers.Count * 10,
-                    PortCl = 5502 + servers.Count * 10
+                    if (grid.CurrentRow == null)
+                        return;
+
+                    var item = grid.CurrentRow.DataBoundItem as ServerEntry;
+                    if (item != null)
+                        servers.Remove(item);
+                };
+
+
+                grid.MouseDown += (s, e) =>
+                {
+                    if (e.Button == MouseButtons.Right)
+                    {
+                        var hit = grid.HitTest(e.X, e.Y);
+                        if (hit.RowIndex >= 0)
+                        {
+                            grid.ClearSelection();
+                            grid.Rows[hit.RowIndex].Selected = true;
+                        }
+                    }
+                };
+
+
+
+                // === КОЛОНКИ ===
+                grid.Columns.Add(new DataGridViewTextBoxColumn
+                {
+                    HeaderText = "Название",
+                    DataPropertyName = "Name",
+                    Width = 160
                 });
+
+                grid.Columns.Add(new DataGridViewComboBoxColumn
+                {
+                    HeaderText = "Режим",
+                    DataPropertyName = "Mode",
+                    DataSource = new[] { "lb", "fmp", "tdm", "dm", "cp", "br" },
+                    Width = 60
+                });
+
+                grid.Columns.Add(new DataGridViewTextBoxColumn
+                {
+                    HeaderText = "Локация",
+                    DataPropertyName = "Location",
+                    Width = 120
+                });
+
+                grid.Columns.Add(new DataGridViewTextBoxColumn
+                {
+                    HeaderText = "Игроки",
+                    DataPropertyName = "MaxPlayers",
+                    Width = 70
+                });
+
+                grid.Columns.Add(new DataGridViewTextBoxColumn
+                {
+                    HeaderText = "CPU",
+                    DataPropertyName = "AffinityCores",
+                    Width = 50
+                });
+
+                grid.Columns.Add(new DataGridViewTextBoxColumn
+                {
+                    HeaderText = "Life Time (минуты)",
+                    DataPropertyName = "LifetimeHours",
+                    Width = 80
+                });
+
+                grid.Columns.Add(new DataGridViewTextBoxColumn
+                {
+                    HeaderText = "Пароль",
+                    DataPropertyName = "Password",
+                    Width = 80
+                });
+
+                grid.Columns.Add(new DataGridViewTextBoxColumn
+                {
+                    HeaderText = "port sv",
+                    DataPropertyName = "PortSv",
+                    Width = 70
+                });
+
+                grid.Columns.Add(new DataGridViewTextBoxColumn
+                {
+                    HeaderText = "port gs",
+                    DataPropertyName = "PortGs",
+                    Width = 70
+                });
+
+                grid.Columns.Add(new DataGridViewTextBoxColumn
+                {
+                    HeaderText = "port cl",
+                    DataPropertyName = "PortCl",
+                    Width = 70
+                });
+
+                // === КНОПКИ ===
+                var btnAdd = new Button { Text = "Добавить сервер" };
+                var btnRemove = new Button { Text = "Удалить" };
+
+                btnAdd.Click += (s, e) =>
+                {
+                    servers.Add(new ServerEntry
+                    {
+                        Name = $"NET_Server_{servers.Count + 1}",
+                        Mode = "lb",
+                        Location = "lobby",
+                        Password = "",
+                        MaxPlayers = 32,
+                        AffinityCores = 1,
+                        PortSv = 5500 + servers.Count * 10,
+                        PortGs = 5501 + servers.Count * 10,
+                        PortCl = 5502 + servers.Count * 10
+                    });
+
+                    grid.DataSource = servers;
+
+                };
+
+                btnRemove.Click += (s, e) =>
+                {
+                    if (grid.SelectedRows.Count > 0)
+                    {
+                        servers.RemoveAt(grid.SelectedRows[0].Index);
+                        grid.DataSource = servers;
+
+                    }
+                };
+
+                var buttons = new FlowLayoutPanel
+                {
+                    Dock = DockStyle.Bottom,
+                    Height = 40
+                };
+
+                buttons.Controls.Add(btnAdd);
+                buttons.Controls.Add(btnRemove);
 
                 grid.DataSource = servers;
 
-            };
+                panel.Controls.Add(grid);
+                panel.Controls.Add(buttons);
+                panel.Controls.Add(title);
 
-            btnRemove.Click += (s, e) =>
+                panelContent.Controls.Add(panel);
+            }
+
+            void LoadFinishStep()
             {
-                if (grid.SelectedRows.Count > 0)
+                var panel = new Panel
                 {
-                    servers.RemoveAt(grid.SelectedRows[0].Index);
-                    grid.DataSource = servers;
+                    Dock = DockStyle.Fill,
+                    Padding = new Padding(20)
+                };
 
-                }
-            };
+                // Берем актуальное состояние галочки
+                bool sandboxMode = useSandboxie;
 
-            var buttons = new FlowLayoutPanel
-            {
-                Dock = DockStyle.Bottom,
-                Height = 40
-            };
-
-            buttons.Controls.Add(btnAdd);
-            buttons.Controls.Add(btnRemove);
-
-            grid.DataSource = servers;
-
-            panel.Controls.Add(grid);
-            panel.Controls.Add(buttons);
-            panel.Controls.Add(title);
-
-            panelContent.Controls.Add(panel);
-        }
-
-        void LoadFinishStep()
-        {
-            var panel = new Panel
-            {
-                Dock = DockStyle.Fill,
-                Padding = new Padding(20)
-            };
-
-            var label = new Label
-            {
-                Dock = DockStyle.Top,
-                AutoSize = true,
-                Font = new Font(Font.FontFamily, 10f),
-                Text =
+                var label = new Label
+                {
+                    Dock = DockStyle.Top,
+                    AutoSize = true,
+                    Font = new Font(Font.FontFamily, 10f),
+                    Text =
                     "Первоначальная настройка завершена.\n\n" +
                     $"• Путь к xrEngine.exe: {(string.IsNullOrEmpty(enginePath) ? "не задан" : "OK")}\n" +
                     $"• Путь к fsgame_dedicated.ltx: {(string.IsNullOrEmpty(fsGamePath) ? "не задан" : "OK")}\n" +
                     $"• Создано серверов: {servers.Count}\n\n" +
                     "Нажмите «Готово», чтобы сохранить настройки."
-            };
+                };
 
-            panel.Controls.Add(label);
-            panelContent.Controls.Add(panel);
-        }
-
-        void SaveConfig()
-        {
-            if (string.IsNullOrEmpty(enginePath) || string.IsNullOrEmpty(fsGamePath))
-            {
-                MessageBox.Show(
-                    "Не заданы пути к xrEngine.exe или fsgame_dedicated.ltx",
-                    "Ошибка",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error
-                );
-                return;
+                panel.Controls.Add(label);
+                panelContent.Controls.Add(panel);
             }
 
-            var config = new AppConfig
+            void SaveConfig()
             {
-                EnginePath = MakeRelativeToBase(enginePath),
-                FsGamePath = MakeRelativeToBase(fsGamePath),
-
-                Servers = servers
-            };
-
-            var json = System.Text.Json.JsonSerializer.Serialize(
-                config,
-                new System.Text.Json.JsonSerializerOptions
+                if (string.IsNullOrEmpty(enginePath) || string.IsNullOrEmpty(fsGamePath))
                 {
-                    WriteIndented = true
+                    MessageBox.Show(
+                        "Не заданы пути к xrEngine.exe или fsgame_dedicated.ltx",
+                        "Ошибка",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error
+                    );
+                    return;
                 }
-            );
 
-            File.WriteAllText("config.json", json);
+                bool sandboxieChecked = useSandboxie;
+
+                var config = new AppConfig
+                {
+                    EnginePath = MakeRelativeToBase(enginePath),
+                    FsGamePath = MakeRelativeToBase(fsGamePath),
+                    UseSandboxie = sandboxieChecked, // Используем её здесь
+
+                    Servers = servers
+                };
+
+                var json = System.Text.Json.JsonSerializer.Serialize(
+                    config,
+                    new System.Text.Json.JsonSerializerOptions
+                    {
+                        WriteIndented = true
+                    }
+                );
+
+                File.WriteAllText("config.json", json);
+            }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+
         }
-
-
-
     }
 }

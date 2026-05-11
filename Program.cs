@@ -52,5 +52,11 @@ class AppConfig
     public string EnginePath { get; set; }
     public string FsGamePath { get; set; }
     public BindingList<ServerEntry> Servers { get; set; }
+    public bool UseSandboxie { get; set; }
+
+    public string SandboxieStartPath { get; set; } =
+    @"C:\Program Files\Sandboxie-Plus\Start.exe";
+
+    public string SandboxieBoxName { get; set; } = "DefaultBox";
 }
 

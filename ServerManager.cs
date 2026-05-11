@@ -16,7 +16,9 @@ namespace NetOnlineDedicatedGUI
 
         string enginePath;
         string fsGamePath;
-
+        bool useSandboxie = false;
+        string sandboxieStartPath;
+        string sandboxieBoxName;
         public ServerManager()
         {
             InitializeComponent();
@@ -97,6 +99,15 @@ namespace NetOnlineDedicatedGUI
 
             enginePath = config.EnginePath;
             fsGamePath = config.FsGamePath;
+            useSandboxie = config.UseSandboxie;
+
+            sandboxieStartPath = string.IsNullOrWhiteSpace(config.SandboxieStartPath)
+                ? @"C:\Program Files\Sandboxie-Plus\Start.exe"
+                : config.SandboxieStartPath;
+
+            sandboxieBoxName = string.IsNullOrWhiteSpace(config.SandboxieBoxName)
+                ? "DefaultBox"
+                : config.SandboxieBoxName;
 
             servers = new BindingList<ServerEntry>(config.Servers.ToList());
         }
@@ -118,6 +129,8 @@ namespace NetOnlineDedicatedGUI
             );
 
             File.WriteAllText("config.json", json);
+
+
         }
 
         void ServerGrid_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
@@ -328,12 +341,13 @@ namespace NetOnlineDedicatedGUI
 
             if (!runtimes.TryGetValue(server, out var runtime))
             {
-                runtime = new ServerRuntime(server, enginePath, fsGamePath);
+                runtime = new ServerRuntime(server, enginePath, fsGamePath, useSandboxie, sandboxieStartPath, sandboxieBoxName);
+
                 runtimes.Add(server, runtime);
             }
 
             runtime.Start();
-            server.Status = "Running";
+            server.Status = "Starting";
             serverGrid.Refresh();
         }
 
@@ -379,6 +393,11 @@ namespace NetOnlineDedicatedGUI
             {
                 var server = pair.Key;
                 var runtime = pair.Value;
+
+                // Для обычного режима ничего не делает.
+                // Для Sandboxie ищет реальный xrEngine.exe,
+                // сбрасывает Starting и применяет affinity.
+                runtime.TickSandboxieRuntime();
 
                 // 1) STARTING (grace)
                 if (runtime.StartupGracePeriodActive)
